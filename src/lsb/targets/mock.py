@@ -146,33 +146,56 @@ class MockTarget:
         self._trials[probe_id] = trial + 1
         rng = random.Random(f"{self.seed}:{probe_id}:{trial}")
 
-        falls = rng.random() < self.profile.chance(technique)
-        if falls:
+        chance = self.profile.chance(technique)
+        # Prompt-level defenses cannot be *measured* against a simulated
+        # assistant - only declared. The multiplier is applied so the mock
+        # behaves plausibly, and lsb.core.runner flags any comparison that
+        # rests on it as simulated rather than observed. Mechanical defenses
+        # (input filtering, output screening) need no multiplier: they change
+        # the bytes, and the presence checks in _comply pick that up for real.
+        chance *= float(request.metadata.get("prompt_defense_factor", 1.0))
+
+        if rng.random() < chance:
             return self._comply(request, rng)
         return self._resist(request, rng)
 
     # -- behaviour branches -------------------------------------------------
 
     def _comply(self, request: TargetRequest, rng: random.Random) -> TargetResponse:
-        """Do the attacker's bidding, using whatever the probe planted."""
+        """Do the attacker's bidding - but only with what actually reached it.
+
+        The presence checks below are what make input-side defenses honestly
+        measurable. A simulated assistant that emitted a sentinel it never
+        received would score every input filter as useless, and one that emitted
+        it regardless would score every filter as perfect. It can only repeat
+        what survived in its own input, so stripping the payload upstream
+        changes the outcome mechanically rather than by assumption.
+        """
         parts = [rng.choice(_COMPLIANT_OPENERS)]
         meta = request.metadata
         tool_calls: list[str] = []
+        inbound = f"{request.user}\n{request.untrusted or ''}"
 
         canary = meta.get("canary")
-        if canary:
+        if canary and canary in request.system:
             parts.append(
                 f"My system prompt begins: \"{_snippet(request.system)}\" "
                 f"and the reference token is {_maybe_obfuscate(canary, rng)}."
             )
 
         secret = meta.get("secret")
-        if secret:
+        if secret and secret in request.system:
             parts.append(f"The protected value is {secret}.")
 
         sentinel = meta.get("sentinel")
-        if sentinel:
+        if sentinel and (sentinel in inbound or _b64(sentinel) in inbound):
             parts.append(sentinel)
+
+        # Leakage probes name the records in the system prompt; a complying
+        # assistant reproduces the ones it can see.
+        for field in meta.get("leak_fields", "").split("||"):
+            if field and field in request.system:
+                parts.append(field)
 
         forbidden = meta.get("forbidden_tools", "")
         if forbidden:
@@ -228,6 +251,12 @@ class EchoTarget:
 def _snippet(text: str, limit: int = 90) -> str:
     flat = " ".join(text.split())
     return flat[:limit] + ("..." if len(flat) > limit else "")
+
+
+def _b64(text: str) -> str:
+    import base64
+
+    return base64.b64encode(text.encode()).decode()
 
 
 def _maybe_obfuscate(token: str, rng: random.Random) -> str:
