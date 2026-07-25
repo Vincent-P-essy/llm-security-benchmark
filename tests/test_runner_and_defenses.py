@@ -13,8 +13,10 @@ import pytest
 from lsb.core.report import aggregate, to_json, to_markdown
 from lsb.core.runner import RunConfig, run, run_probe
 from lsb.core.suite import load
-from lsb.defenses import catalogue, load as load_defense
-from lsb.targets import TargetRequest, TargetResponse, load as load_target
+from lsb.defenses import catalogue
+from lsb.defenses import load as load_defense
+from lsb.targets import TargetRequest, TargetResponse
+from lsb.targets import load as load_target
 
 
 @pytest.fixture(scope="module")

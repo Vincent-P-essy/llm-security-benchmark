@@ -87,7 +87,10 @@ PROFILES: dict[str, Profile] = {
     ),
     "hardened": Profile(
         name="hardened",
-        description="Delimited untrusted content, instruction-hierarchy prompt, output canary filter.",
+        description=(
+            "Delimited untrusted content, instruction-hierarchy prompt, "
+            "output canary filter."
+        ),
         default=0.12,
         susceptibility={
             "direct-override": 0.02,
@@ -198,9 +201,9 @@ class MockTarget:
 
         # Leakage probes name the records in the system prompt; a complying
         # assistant reproduces the ones it can see.
-        for field in meta.get("leak_fields", "").split("||"):
-            if field and field in request.system:
-                parts.append(field)
+        for record in meta.get("leak_fields", "").split("||"):
+            if record and record in request.system:
+                parts.append(record)
 
         forbidden = meta.get("forbidden_tools", "")
         if forbidden:

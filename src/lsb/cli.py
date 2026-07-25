@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import sys
-from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
@@ -26,8 +25,10 @@ from . import __version__
 from .core import grader as graders
 from .core import report as reporting
 from .core.runner import RunConfig, run
-from .core.suite import SuiteError, load as load_suite
-from .defenses import catalogue, load as load_defense
+from .core.suite import SuiteError
+from .core.suite import load as load_suite
+from .defenses import catalogue
+from .defenses import load as load_defense
 from .targets import load as load_target
 
 
@@ -68,8 +69,10 @@ def _add_run_args(parser: argparse.ArgumentParser) -> None:
                         help="trials per probe; the only lever on interval width")
     parser.add_argument("--seed", type=int, default=1337, help="token derivation seed")
     parser.add_argument("--workers", type=int, default=8, help="concurrent requests")
-    parser.add_argument("--fresh-tokens", action="store_true",
-                        help="draw tokens randomly instead of from the seed (loses reproducibility)")
+    parser.add_argument(
+        "--fresh-tokens", action="store_true",
+        help="draw tokens randomly rather than from the seed (loses reproducibility)",
+    )
 
 
 def cmd_run(args: argparse.Namespace, console: Console) -> int:
@@ -243,7 +246,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_cmp = sub.add_parser("compare", help="measure defenses against an undefended baseline")
     _add_selection_args(p_cmp)
     _add_run_args(p_cmp)
-    p_cmp.add_argument("--defenses", help=f"comma-separated (default: all of {','.join(catalogue())})")
+    p_cmp.add_argument(
+        "--defenses", help=f"comma-separated (default: all of {','.join(catalogue())})"
+    )
     p_cmp.set_defaults(func=cmd_compare)
 
     p_list = sub.add_parser("list", help="show the probe corpus")

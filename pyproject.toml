@@ -49,3 +49,9 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# The script has to extend sys.path before it can import the package it tests.
+"scripts/reproduce.py" = ["E402"]
+# A readable assertion beats a column limit; wrapping these hurts the tests.
+"tests/*" = ["E501"]

@@ -24,7 +24,8 @@ from lsb.core.report import aggregate  # noqa: E402
 from lsb.core.runner import RunConfig, run  # noqa: E402
 from lsb.core.stats import compare  # noqa: E402
 from lsb.core.suite import load as load_suite  # noqa: E402
-from lsb.defenses import catalogue, load as load_defense  # noqa: E402
+from lsb.defenses import catalogue  # noqa: E402
+from lsb.defenses import load as load_defense
 from lsb.targets import load as load_target  # noqa: E402
 
 SEED = 1337
@@ -52,7 +53,10 @@ def run_matrix() -> dict:
             "overall": agg.overall.to_dict(),
             "by_family": {f.value: r.to_dict() for f, r in agg.by_family.items()},
         }
-        print(f"  {profile:9} exposure {agg.exposure:5.1f} ({agg.letter})  ASR {agg.overall.pct:>6}")
+        print(
+            f"  {profile:9} exposure {agg.exposure:5.1f} "
+            f"({agg.letter})  ASR {agg.overall.pct:>6}"
+        )
     out["profiles"] = profiles
 
     print("\n== defenses vs the undefended baseline (target: mock:naive) ==")
@@ -99,7 +103,10 @@ def run_matrix() -> dict:
     print(f"  with filter           {filtered.pct:>6}")
     if residual:
         pct = 100 * encoded / len(residual)
-        print(f"  residual leaks        {len(residual)}, of which {encoded} obfuscated ({pct:.0f}%)")
+        print(
+            f"  residual leaks        {len(residual)}, "
+            f"of which {encoded} obfuscated ({pct:.0f}%)"
+        )
     return out
 
 
@@ -129,9 +136,16 @@ def write_markdown(data: dict) -> None:
             f"{o['point'] * 100:.1f}% | {o['ci_low'] * 100:.1f}–{o['ci_high'] * 100:.1f}% |"
         )
 
-    lines += ["", "## Attack success by family", "", "| Profile | " + " | ".join(
-        f.replace("_", " ").title() for f in data["profiles"]["naive"]["by_family"]
-    ) + " |", "| --- | " + " | ".join("---:" for _ in data["profiles"]["naive"]["by_family"]) + " |"]
+    families = list(data["profiles"]["naive"]["by_family"])
+    header = " | ".join(f.replace("_", " ").title() for f in families)
+    rule = " | ".join("---:" for _ in families)
+    lines += [
+        "",
+        "## Attack success by family",
+        "",
+        f"| Profile | {header} |",
+        f"| --- | {rule} |",
+    ]
     for name, row in data["profiles"].items():
         cells = " | ".join(f"{r['point'] * 100:.1f}%" for r in row["by_family"].values())
         lines.append(f"| `mock:{name}` | {cells} |")

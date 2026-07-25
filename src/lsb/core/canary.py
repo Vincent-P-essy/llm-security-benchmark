@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import binascii
 import codecs
+import contextlib
 import re
 import secrets
 
@@ -68,10 +69,8 @@ def _candidate_decodings(text: str) -> list[str]:
         except ValueError:
             continue
 
-    try:
+    with contextlib.suppress(UnicodeDecodeError, TypeError, ValueError):
         out.append(codecs.decode(text, "rot13"))
-    except (UnicodeDecodeError, TypeError, ValueError):
-        pass
 
     return out
 

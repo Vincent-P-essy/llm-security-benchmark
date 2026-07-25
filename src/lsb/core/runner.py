@@ -132,7 +132,8 @@ def _render(text: str | None, tokens: dict[str, str]) -> str | None:
 
 
 def _build_request(probe: Probe, tokens: dict[str, str], trial: int, seed: int) -> TargetRequest:
-    leak_fields = probe.grader.params.get("fields", []) if probe.grader.name == "record_leak" else []
+    is_record_leak = probe.grader.name == "record_leak"
+    leak_fields = probe.grader.params.get("fields", []) if is_record_leak else []
     expected = probe.grader.params.get("expected_signal", [])
 
     return TargetRequest(
