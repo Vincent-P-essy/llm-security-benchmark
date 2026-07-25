@@ -144,7 +144,12 @@ class MockTarget:
         # runner's thread pool. Repeated runs of one probe stay independent
         # because the index is part of the seed.
         trial = int(request.metadata.get("trial", 0))
-        rng = random.Random(f"{self.seed}:{probe_id}:{trial}")
+        # The run's seed wins over the target's own. Without this the config
+        # seed would only change which tokens get minted, and two runs at
+        # different seeds would produce an identical sequence of coin flips -
+        # a --seed flag that quietly does nothing.
+        seed = request.metadata.get("run_seed", self.seed)
+        rng = random.Random(f"{seed}:{probe_id}:{trial}")
 
         chance = self.profile.chance(technique)
         # Prompt-level defenses cannot be *measured* against a simulated

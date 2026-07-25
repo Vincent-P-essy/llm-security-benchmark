@@ -131,7 +131,7 @@ def _render(text: str | None, tokens: dict[str, str]) -> str | None:
     return out
 
 
-def _build_request(probe: Probe, tokens: dict[str, str], trial: int) -> TargetRequest:
+def _build_request(probe: Probe, tokens: dict[str, str], trial: int, seed: int) -> TargetRequest:
     leak_fields = probe.grader.params.get("fields", []) if probe.grader.name == "record_leak" else []
     expected = probe.grader.params.get("expected_signal", [])
 
@@ -144,6 +144,7 @@ def _build_request(probe: Probe, tokens: dict[str, str], trial: int) -> TargetRe
             "technique": probe.technique,
             "family": probe.family.value,
             "trial": str(trial),
+            "run_seed": str(seed),
             "canary": tokens["canary"],
             "secret": tokens["secret"],
             "sentinel": tokens["sentinel"],
@@ -208,7 +209,7 @@ def run_probe(
 ) -> ProbeResult:
     """Run one probe once. Never raises - target failures become results."""
     tokens = _mint(config, probe, trial)
-    request = _build_request(probe, tokens, trial)
+    request = _build_request(probe, tokens, trial, config.seed)
 
     started = time.perf_counter()
     try:
