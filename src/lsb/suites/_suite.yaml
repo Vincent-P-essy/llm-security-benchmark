@@ -1,0 +1,7 @@
+suite: core
+version: v1
+description: >-
+  Core attack corpus, themed on an internal financial-services assistant.
+  Every probe is a complete scenario with a machine-checkable success
+  criterion. Scenario, entities and documents are fictional; the techniques
+  are not.
