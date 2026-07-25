@@ -134,16 +134,16 @@ class MockTarget:
         self.profile = PROFILES[profile]
         self.seed = seed
         self.name = f"mock:{profile}"
-        self._trials: dict[str, int] = {}
 
     def send(self, request: TargetRequest) -> TargetResponse:
         probe_id = request.metadata.get("probe_id", "unknown")
         technique = request.metadata.get("technique", "direct-override")
 
-        # A distinct trial index per probe keeps repeated runs of the same probe
-        # independent instead of returning one cached answer N times.
-        trial = self._trials.get(probe_id, 0)
-        self._trials[probe_id] = trial + 1
+        # The trial index comes from the runner rather than from internal state,
+        # which keeps this target stateless and therefore safe to call from the
+        # runner's thread pool. Repeated runs of one probe stay independent
+        # because the index is part of the seed.
+        trial = int(request.metadata.get("trial", 0))
         rng = random.Random(f"{self.seed}:{probe_id}:{trial}")
 
         chance = self.profile.chance(technique)
