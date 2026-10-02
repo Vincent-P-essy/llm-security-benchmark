@@ -17,6 +17,12 @@ and reported with Wilson confidence intervals rather than as bare percentages.
 
 ![lsb run](docs/assets/run-report.png)
 
+## Execution preview
+
+![llm-security-benchmark execution](docs/screenshots/execution.png)
+
+Local execution of `lsb compare --target mock:naive`. The input and output shown come from the repository example or test fixtures. [Verification](docs/verification.md).
+
 ## Why another one of these
 
 [garak](https://github.com/NVIDIA/garak), [PyRIT](https://github.com/Azure/PyRIT)
